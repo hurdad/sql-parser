@@ -4,7 +4,7 @@ sudo: required
 dist: trusty
 env:
   matrix:
-  - DISTRO=ubuntu-16.04
+  - DISTRO=ubuntu-17.04
   - DISTRO=centos-7
 services:
 - docker
