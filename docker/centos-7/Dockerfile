@@ -1,7 +1,6 @@
-FROM ubuntu:16.04
+FROM centos:7
 
-RUN apt-get update
-RUN apt-get upgrade
-RUN apt-get install --yes make flex bison
+RUN yum update -y
+RUN yum install -y bison flex make gcc-c++
 
 CMD ["/root/sql-parser/docker/run_test.sh"]
