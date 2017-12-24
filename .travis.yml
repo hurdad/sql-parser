@@ -1,16 +1,12 @@
-language: cpp
 sudo: required
 dist: trusty
 env:
   matrix:
-  - DISTRO=ubuntu-16.04 MODE=debug
-  - DISTRO=ubuntu-16.04 MODE=release
-  - DISTRO=centos-7 MODE=debug
-  - DISTRO=centos-7 MODE=release
+  - DISTRO=ubuntu-16.04
+  - DISTRO=centos-7
 services:
 - docker
 before_install:
 - docker build docker/${DISTRO} -t dev/sql-parser/${DISTRO}
 script:
-- if [[ ${MODE} == "debug" ]]; then docker run -v ${TRAVIS_BUILD_DIR}:/root/sql-parser dev/sql-parser/${DISTRO}; fi
-- if [[ ${MODE} == "release" ]]; then docker run -v ${TRAVIS_BUILD_DIR}:/root/sql-parser dev/sql-parser/${DISTRO}; fi
+- docker run -v ${TRAVIS_BUILD_DIR}:/root/sql-parser dev/sql-parser/${DISTRO}
