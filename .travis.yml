@@ -3,14 +3,14 @@ sudo: required
 dist: trusty
 env:
   matrix:
-  - DISTRO=ubuntu-16.04 MODE=Debug
-  - DISTRO=ubuntu-16.04 MODE=Release
-  - DISTRO=centos-7 MODE=Debug
-  - DISTRO=centos-7 MODE=Release
+  - DISTRO=ubuntu-16.04 MODE=debug
+  - DISTRO=ubuntu-16.04 MODE=release
+  - DISTRO=centos-7 MODE=debug
+  - DISTRO=centos-7 MODE=release
 services:
 - docker
 before_install:
 - docker build docker/${DISTRO} -t dev/sql-parser/${DISTRO}
 script:
-- if [[ ${MODE} == "Debug" ]]; then docker run -v ${TRAVIS_BUILD_DIR}:/root/sql-parser dev/sql-parser/${DISTRO}; fi
-- if [[ ${MODE} == "Release" ]]; then docker run -v ${TRAVIS_BUILD_DIR}:/root/sql-parser dev/sql-parser/${DISTRO}; fi
+- if [[ ${MODE} == "debug" ]]; then docker run -v ${TRAVIS_BUILD_DIR}:/root/sql-parser dev/sql-parser/${DISTRO}; fi
+- if [[ ${MODE} == "release" ]]; then docker run -v ${TRAVIS_BUILD_DIR}:/root/sql-parser dev/sql-parser/${DISTRO}; fi
