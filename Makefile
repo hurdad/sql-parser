@@ -51,7 +51,7 @@ else
 endif
 LIB_CPP    = $(shell find $(SRC) -name '*.cpp' -not -path "$(SRCPARSER)/*") $(PARSER_CPP)
 LIB_H      = $(shell find $(SRC) -name '*.h' -not -path "$(SRCPARSER)/*") $(PARSER_H)
-LIB_ALL    = $(shell find $(SRC) -name '*.cpp' -not -path "$(SRCPARSER)/*") $(shell find $(SRC) -name '*.h' -not -path "$(SRCPARSER)/*")
+LIB_ALL    = $(shell find $(SRC) -name '*.cpp' -not -path "$(SRCPARSER)/*" -not -path "$(SRC)/util/json/*") $(shell find $(SRC) -name '*.h' -not -path "$(SRCPARSER)/*" -not -path "$(SRC)/util/json/*")
 LIB_OBJ    = $(LIB_CPP:%.cpp=%.o)
 
 library: $(LIB_BUILD)
