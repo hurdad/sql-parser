@@ -214,7 +214,6 @@ TEST(JsonSelectConditionalSelectTest) {
   Json::Reader reader;
   std::string json = jsonPrintStatementInfo(stmt, true);
   ASSERT_TRUE(reader.parse(json, root));
-  printf(json.c_str());
 
   ASSERT(root.isMember("whereClause"));
   ASSERT_STREQ(root["whereClause"]["type"].asString(), "kExprOperator");
