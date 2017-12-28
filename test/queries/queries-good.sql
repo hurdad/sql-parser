@@ -1,4 +1,4 @@
-# This file contains a list of strings that are NOT valid SQL queries.
+# This file contains a list of strings that are valid SQL queries.
 # Each line contains a single SQL query.
 # SELECT statement
 SELECT * FROM orders;

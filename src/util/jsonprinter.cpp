@@ -44,28 +44,100 @@ namespace hsql {
     }
 
     switch (expr->opType) {
+    case kOpNone:
+      root["opType"] = "kOpNone";
+      break;
+    case kOpBetween:
+      root["opType"] = "kOpBetween";
+      break;
+    case kOpCase:
+      root["opType"] = "kOpCase";
+      break;
+    case kOpPlus:
+      root["opType"] = "kOpPlus";
+      break;
+    case kOpMinus:
+      root["opType"] = "kOpMinus";
+      break;
+    case kOpAsterisk:
+      root["opType"] = "kOpAsterisk";
+      break;
+    case kOpSlash:
+      root["opType"] = "kOpSlash";
+      break;
+    case kOpPercentage:
+      root["opType"] = "kOpPercentage";
+      break;
+    case kOpCaret:
+      root["opType"] = "kOpCaret";
+      break;
+    case kOpEquals:
+      root["opType"] = "kOpEquals";
+      break;
+    case kOpNotEquals:
+      root["opType"] = "kOpNotEquals";
+      break;
+    case kOpLess:
+      root["opType"] = "kOpLess";
+      break;
+    case kOpLessEq:
+      root["opType"] = "kOpLessEq";
+      break;
+    case kOpGreater:
+      root["opType"] = "kOpGreater";
+      break;
+    case kOpGreaterEq:
+      root["opType"] = "kOpGreaterEq";
+      break;
+    case kOpLike:
+      root["opType"] = "kOpLike";
+      break;
+    case kOpNotLike:
+      root["opType"] = "kOpNotLike";
+      break;
+    case kOpILike:
+      root["opType"] = "kOpILike";
+      break;
     case kOpAnd:
-      root["type"] = "AND";
+      root["opType"] = "kOpAnd";
       break;
     case kOpOr:
-      root["type"] = "OR";
+      root["opType"] = "kOpOr";
+      break;
+    case kOpIn:
+      root["opType"] = "kOpIn";
+      break;
+    case kOpConcat:
+      root["opType"] = "kOpConcat";
       break;
     case kOpNot:
-      root["type"] = "NOT";
+      root["opType"] = "kOpNot";
+      break;
+    case kOpUnaryMinus:
+      root["opType"] = "kOpUnaryMinus";
+      break;
+    case kOpIsNull:
+      root["opType"] = "kOpIsNull";
+      break;
+    case kOpExists:
+      root["opType"] = "kOpExists";
       break;
     default:
-      root["type"] = expr->opType;
+      root["opType"] = expr->opType;
 
       break;
     }
-    jsonPrintExpression(expr->expr, root["expr"]);
+
+    if (expr->expr != nullptr) {
+      jsonPrintExpression(expr->expr, root["expr"]);
+    }
     if (expr->expr2 != nullptr) {
       jsonPrintExpression(expr->expr2, root["expr2"]);
     } else if (expr->exprList != nullptr) {
       for (Expr* e : *expr->exprList) {
         Json::Value exp;
         jsonPrintExpression(e, exp);
-        root["exp"].append(exp);
+        root["exprList"].append(exp);
       }
     }
   }
@@ -76,7 +148,7 @@ namespace hsql {
       root["exp"] = "*";
       break;
     case kExprColumnRef:
-
+      root["type"] = "kExprColumnRef";
       if(expr->table) {
         root["name"] = expr->name;
         root["table"] = expr->table;
@@ -86,40 +158,50 @@ namespace hsql {
       break;
     // case kExprTableColumnRef: inprint(expr->table, expr->name, numIndent); break;
     case kExprLiteralFloat:
+      root["type"] = "kExprLiteralFloat";
       root["fval"] = expr->fval;
       break;
     case kExprLiteralInt:
+      root["type"] = "kExprLiteralInt";
       root["ival"] = (Json::Value::Int64)expr->ival;
       break;
     case kExprLiteralString:
+      root["type"] = "kExprLiteralString";
       root["name"] = expr->name;
       break;
     case kExprFunctionRef:
-      root["function"] = expr->name;
+      root["type"] = "kExprFunctionRef";
+      root["distinct"] = expr->distinct;
+      root["name"] = expr->name;
       for (Expr* e : *expr->exprList) {
         Json::Value exp;
         jsonPrintExpression(e, exp);
-        root["param"].append(exp);
+        root["exprList"].append(exp);
       }
       break;
     case kExprOperator:
-      jsonPrintOperatorExpression(expr, root["operator"]);
+      root["type"] = "kExprOperator";
+      jsonPrintOperatorExpression(expr, root);
       break;
     case kExprSelect:
+      root["type"] = "kExprSelect";
       jsonPrintSelectStatementInfo(expr->select, root["select"]);
       break;
     case kExprParameter:
+      root["type"] = "kExprParameter";
       root["ival"] = (Json::Value::Int64)expr->ival;
       break;
     case kExprArray:
+      root["type"] = "kExprArray";
       for (Expr* e : *expr->exprList) {
         Json::Value exp;
         jsonPrintExpression(e, exp);
-        root["exp"].append(exp);
+        root["exprList"].append(exp);
       }
       break;
     case kExprArrayIndex:
-      jsonPrintExpression(expr->expr, root["exp"]);
+      root["type"] = "kExprArrayIndex";
+      jsonPrintExpression(expr->expr, root["expr"]);
       root["ival"] = (Json::Value::Int64)expr->ival;
       break;
     default:
@@ -132,40 +214,47 @@ namespace hsql {
   }
 
   void jsonPrintSelectStatementInfo(const SelectStatement* stmt, Json::Value& root) {
+    root["selectDistinct"] = stmt->selectDistinct;
     for (Expr* expr : *stmt->selectList) {
       Json::Value val;
       jsonPrintExpression(expr, val);
-      root["fields"].append(val);
+      root["selectList"].append(val);
     }
 
     if (stmt->fromTable != nullptr) {
-      jsonPrintTableRefInfo(stmt->fromTable, root["table"]);
+      jsonPrintTableRefInfo(stmt->fromTable, root["fromTable"]);
     }
 
     if (stmt->whereClause != nullptr) {
-      jsonPrintExpression(stmt->whereClause, root["where"]);
+      jsonPrintExpression(stmt->whereClause, root["whereClause"]);
     }
 
     if (stmt->groupBy != nullptr) {
       for (Expr* expr : *stmt->groupBy->columns) {
         Json::Value val;
         jsonPrintExpression(expr, val);
-        root["group_by"].append(val);
-
+        root["groupBy"]["columns"].append(val);
       }
       if (stmt->groupBy->having != nullptr) {
-        jsonPrintExpression(stmt->groupBy->having, root["having"]);
+        jsonPrintExpression(stmt->groupBy->having, root["groupBy"]["having"]);
       }
     }
 
     if (stmt->unionSelect != nullptr) {
-      jsonPrintSelectStatementInfo(stmt->unionSelect, root["union"]);
+      jsonPrintSelectStatementInfo(stmt->unionSelect, root["unionSelect"]);
     }
 
     if (stmt->order != nullptr) {
-      jsonPrintExpression(stmt->order->at(0)->expr, root["orderby"]);
-      if (stmt->order->at(0)->type == kOrderAsc) root["orderby_ascending"] = true;
-      else root["orderby_ascending"] = false;
+
+      for (OrderDescription* order : *stmt->order) {
+        Json::Value val;
+        jsonPrintExpression(order->expr, val);
+        if(order->type == kOrderAsc)
+          val["ascending"] = true;
+        else val["ascending"] = false;
+
+        root["order"].append(val);
+      }
     }
 
     if (stmt->limit != nullptr) {
