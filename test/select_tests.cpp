@@ -70,9 +70,9 @@ TEST(SelectHavingTest) {
   ASSERT_NOTNULL(group);
   ASSERT_EQ(group->columns->size(), 1);
   ASSERT_EQ(group->having->opType, kOpLess);
-  ASSERT(group->having->expr->isType(kExprFunctionRef));
-  ASSERT(group->having->expr2->isType(kExprLiteralFloat));
-  ASSERT_EQ(group->having->expr2->fval, -2.0);
+  ASSERT(group->having->exprList->at(0)->isType(kExprFunctionRef));
+  ASSERT(group->having->exprList->at(1)->isType(kExprLiteralFloat));
+  ASSERT_EQ(group->having->exprList->at(1)->fval, -2.0);
 }
 
 
@@ -147,14 +147,14 @@ TEST(SelectBetweenTest) {
   ASSERT(where->isType(kExprOperator));
   ASSERT_EQ(where->opType, kOpBetween);
 
-  ASSERT_STREQ(where->expr->getName(), "grade");
-  ASSERT(where->expr->isType(kExprColumnRef));
+  ASSERT_STREQ(where->exprList->at(0)->getName(), "grade");
+  ASSERT(where->exprList->at(0)->isType(kExprColumnRef));
 
-  ASSERT_EQ(where->exprList->size(), 2);
-  ASSERT(where->exprList->at(0)->isType(kExprLiteralInt));
-  ASSERT_EQ(where->exprList->at(0)->ival, -1);
-  ASSERT(where->exprList->at(1)->isType(kExprColumnRef));
-  ASSERT_STREQ(where->exprList->at(1)->getName(), "c");
+  ASSERT_EQ(where->exprList->size(), 3);
+  ASSERT(where->exprList->at(1)->isType(kExprLiteralInt));
+  ASSERT_EQ(where->exprList->at(1)->ival, -1);
+  ASSERT(where->exprList->at(2)->isType(kExprColumnRef));
+  ASSERT_STREQ(where->exprList->at(2)->getName(), "c");
 }
 
 TEST(SelectConditionalSelectTest) {
@@ -171,26 +171,25 @@ TEST(SelectConditionalSelectTest) {
   ASSERT_EQ(where->opType, kOpAnd);
 
   // a = (SELECT ...)
-  Expr* cond1 = where->expr;
+  Expr* cond1 = where->exprList->at(0);
   ASSERT_NOTNULL(cond1);
-  ASSERT_NOTNULL(cond1->expr);
+  ASSERT_NOTNULL(cond1->exprList->at(0));
   ASSERT_EQ(cond1->opType, kOpEquals);
-  ASSERT_STREQ(cond1->expr->getName(), "a");
-  ASSERT(cond1->expr->isType(kExprColumnRef));
+  ASSERT_STREQ(cond1->exprList->at(0)->getName(), "a");
+  ASSERT(cond1->exprList->at(0)->isType(kExprColumnRef));
 
-  ASSERT_NOTNULL(cond1->expr2);
-  ASSERT(cond1->expr2->isType(kExprSelect));
+  ASSERT_NOTNULL(cond1->exprList->at(1));
+  ASSERT(cond1->exprList->at(1)->isType(kExprSelect));
 
-  SelectStatement* select2 = cond1->expr2->select;
+  SelectStatement* select2 = cond1->exprList->at(1)->select;
   ASSERT_NOTNULL(select2);
   ASSERT_STREQ(select2->fromTable->getName(), "tt");
 
-
   // EXISTS (SELECT ...)
-  Expr* cond2 = where->expr2;
+  Expr* cond2 = where->exprList->at(1);
   ASSERT_EQ(cond2->opType, kOpExists);
+  ASSERT(cond2->isType(kExprOperator));
   ASSERT_NOTNULL(cond2->select);
-
   SelectStatement* ex_select = cond2->select;
   ASSERT_STREQ(ex_select->fromTable->getName(), "test");
 }
@@ -214,9 +213,10 @@ TEST(SelectCaseWhen) {
   ASSERT_NOTNULL(caseExpr);
   ASSERT(caseExpr->isType(kExprOperator));
   ASSERT_EQ(caseExpr->opType, kOpCase);
-  ASSERT(caseExpr->expr->isType(kExprOperator));
-  ASSERT_EQ(caseExpr->expr->opType, kOpEquals);
-  ASSERT_EQ(caseExpr->exprList->size(), 2);
+
+  ASSERT(caseExpr->exprList->at(0)->isType(kExprOperator));
+  ASSERT_EQ(caseExpr->exprList->at(0)->opType, kOpEquals);
+  ASSERT_EQ(caseExpr->exprList->size(), 3);
 }
 
 TEST(SelectJoin) {
@@ -238,10 +238,10 @@ TEST(SelectJoin) {
   ASSERT_EQ(outer_join->right->type, kTableName);
   ASSERT_STREQ(outer_join->right->name, "Product");
   ASSERT_EQ(outer_join->condition->opType, kOpEquals);
-  ASSERT_STREQ(outer_join->condition->expr->table, "fact");
-  ASSERT_STREQ(outer_join->condition->expr->name, "product_id");
-  ASSERT_STREQ(outer_join->condition->expr2->table, "Product");
-  ASSERT_STREQ(outer_join->condition->expr2->name, "id");
+  ASSERT_STREQ(outer_join->condition->exprList->at(0)->table, "fact");
+  ASSERT_STREQ(outer_join->condition->exprList->at(0)->name, "product_id");
+  ASSERT_STREQ(outer_join->condition->exprList->at(1)->table, "Product");
+  ASSERT_STREQ(outer_join->condition->exprList->at(1)->name, "id");
 
   // Joins are are left associative.
   // So the second join should be on the left.
@@ -255,8 +255,8 @@ TEST(SelectJoin) {
   ASSERT_STREQ(inner_join->right->name, "City");
 
   ASSERT_EQ(inner_join->condition->opType, kOpEquals);
-  ASSERT_STREQ(inner_join->condition->expr->table, "fact");
-  ASSERT_STREQ(inner_join->condition->expr->name, "city_id");
-  ASSERT_STREQ(inner_join->condition->expr2->table, "City");
-  ASSERT_STREQ(inner_join->condition->expr2->name, "id");
+  ASSERT_STREQ(inner_join->condition->exprList->at(0)->table, "fact");
+  ASSERT_STREQ(inner_join->condition->exprList->at(0)->name, "city_id");
+  ASSERT_STREQ(inner_join->condition->exprList->at(1)->table, "City");
+  ASSERT_STREQ(inner_join->condition->exprList->at(1)->name, "id");
 }

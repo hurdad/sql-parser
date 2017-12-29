@@ -24,8 +24,8 @@ TEST(DeleteStatementTest) {
   ASSERT_STREQ(stmt->tableName, "students");
   ASSERT_NOTNULL(stmt->expr);
   ASSERT(stmt->expr->isType(kExprOperator));
-  ASSERT_STREQ(stmt->expr->expr->name, "grade");
-  ASSERT_EQ(stmt->expr->expr2->fval, 2.0);
+  ASSERT_STREQ(stmt->expr->exprList->at(0)->name, "grade");
+  ASSERT_EQ(stmt->expr->exprList->at(1)->fval, 2.0);
 }
 
 TEST(CreateStatementTest) {
@@ -76,10 +76,9 @@ TEST(UpdateStatementTest) {
   ASSERT_NOTNULL(stmt->where);
   ASSERT(stmt->where->isType(kExprOperator));
   ASSERT_EQ(stmt->where->opType, kOpEquals);
-  ASSERT_STREQ(stmt->where->expr->name, "name");
-  ASSERT_STREQ(stmt->where->expr2->name, "Max Mustermann");
+  ASSERT_STREQ(stmt->where->exprList->at(0)->name, "name");
+  ASSERT_STREQ(stmt->where->exprList->at(1)->name, "Max Mustermann");
 }
-
 
 TEST(InsertStatementTest) {
   TEST_PARSE_SINGLE_SQL(
@@ -90,9 +89,15 @@ TEST(InsertStatementTest) {
     stmt);
 
   ASSERT_EQ(stmt->values->size(), 4);
-  // TODO
+  ASSERT(stmt->values->at(0)->isType(kExprLiteralString));
+  ASSERT_STREQ(stmt->values->at(0)->name, "Max Mustermann");
+  ASSERT(stmt->values->at(1)->isType(kExprLiteralInt));
+  ASSERT_EQ(stmt->values->at(1)->ival, 12345);
+  ASSERT(stmt->values->at(2)->isType(kExprLiteralString));
+  ASSERT_STREQ(stmt->values->at(2)->name, "Musterhausen");
+  ASSERT(stmt->values->at(3)->isType(kExprLiteralFloat));
+  ASSERT_EQ(stmt->values->at(3)->fval, 2.0);
 }
-
 
 TEST(DropTableStatementTest) {
   TEST_PARSE_SINGLE_SQL(

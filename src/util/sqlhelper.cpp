@@ -66,25 +66,8 @@ namespace hsql {
       return;
     }
 
-    switch (expr->opType) {
-    case kOpAnd:
-      inprint("AND", numIndent);
-      break;
-    case kOpOr:
-      inprint("OR", numIndent);
-      break;
-    case kOpNot:
-      inprint("NOT", numIndent);
-      break;
-    default:
-      inprintU(expr->opType, numIndent);
-      break;
-    }
-    printExpression(expr->expr, numIndent + 1);
-    if (expr->expr2 != nullptr) {
-        printExpression(expr->expr2, numIndent + 1);
-    } else if (expr->exprList != nullptr) {
-        for (Expr* e : *expr->exprList) printExpression(e, numIndent + 1);
+    if (expr->exprList != nullptr) {
+      for (Expr* e : *expr->exprList) printExpression(e, numIndent + 1);
     }
   }
 
@@ -96,8 +79,8 @@ namespace hsql {
     case kExprColumnRef:
       inprint(expr->name, numIndent);
       if(expr->table) {
-        inprint("Table:", numIndent+1);
-        inprint(expr->table, numIndent+2);
+        inprint("Table:", numIndent + 1);
+        inprint(expr->table, numIndent + 2);
       }
       break;
     // case kExprTableColumnRef: inprint(expr->table, expr->name, numIndent); break;
@@ -118,7 +101,7 @@ namespace hsql {
       printOperatorExpression(expr, numIndent);
       break;
     case kExprSelect:
-      printSelectStatementInfo(expr->select, numIndent);
+      //TODO printSelectStatementInfo(expr->select, numIndent);
       break;
     case kExprParameter:
       inprint(expr->ival, numIndent);
@@ -127,7 +110,7 @@ namespace hsql {
       for (Expr* e : *expr->exprList) printExpression(e, numIndent + 1);
       break;
     case kExprArrayIndex:
-      printExpression(expr->expr, numIndent + 1);
+      //TODO printExpression(expr->exprList, numIndent + 1);
       inprint(expr->ival, numIndent);
       break;
     default:

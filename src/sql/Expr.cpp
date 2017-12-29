@@ -8,8 +8,6 @@ namespace hsql {
 
   Expr::Expr(ExprType type)
     : type(type),
-      expr(nullptr),
-      expr2(nullptr),
       exprList(nullptr),
       select(nullptr),
       name(nullptr),
@@ -22,8 +20,6 @@ namespace hsql {
       distinct(false) {};
 
   Expr::~Expr() {
-    delete expr;
-    delete expr2;
     delete select;
     free(name);
     free(table);
@@ -45,24 +41,25 @@ namespace hsql {
   Expr* Expr::makeOpUnary(OperatorType op, Expr* expr) {
     Expr* e = new Expr(kExprOperator);
     e->opType = op;
-    e->expr = expr;
-    e->expr2 = nullptr;
+    e->exprList = new std::vector<Expr*>();
+    e->exprList->push_back(expr);
     return e;
   }
 
   Expr* Expr::makeOpBinary(Expr* expr1, OperatorType op, Expr* expr2) {
     Expr* e = new Expr(kExprOperator);
     e->opType = op;
-    e->expr = expr1;
-    e->expr2 = expr2;
+    e->exprList = new std::vector<Expr*>();
+    e->exprList->push_back(expr1);
+    e->exprList->push_back(expr2);
     return e;
   }
 
   Expr* Expr::makeBetween(Expr* expr, Expr* left, Expr* right) {
     Expr* e = new Expr(kExprOperator);
-    e->expr = expr;
     e->opType = kOpBetween;
     e->exprList = new std::vector<Expr*>();
+    e->exprList->push_back(expr);
     e->exprList->push_back(left);
     e->exprList->push_back(right);
     return e;
@@ -70,18 +67,18 @@ namespace hsql {
 
   Expr* Expr::makeCase(Expr* expr, Expr* then) {
     Expr* e = new Expr(kExprOperator);
-    e->expr = expr;
     e->opType = kOpCase;
     e->exprList = new std::vector<Expr*>();
+    e->exprList->push_back(expr);
     e->exprList->push_back(then);
     return e;
   }
 
   Expr* Expr::makeCase(Expr* expr, Expr* then, Expr* other) {
     Expr* e = new Expr(kExprOperator);
-    e->expr = expr;
     e->opType = kOpCase;
     e->exprList = new std::vector<Expr*>();
+    e->exprList->push_back(expr);
     e->exprList->push_back(then);
     e->exprList->push_back(other);
     return e;
@@ -151,7 +148,8 @@ namespace hsql {
 
   Expr* Expr::makeArrayIndex(Expr* expr, int64_t index) {
     Expr* e = new Expr(kExprArrayIndex);
-    e->expr = expr;
+    e->exprList = new std::vector<Expr*>();
+    e->exprList->push_back(expr);
     e->ival = index;
     return e;
   }
@@ -178,18 +176,17 @@ namespace hsql {
   Expr* Expr::makeInOperator(Expr* expr, std::vector<Expr*>* exprList) {
     Expr* e = new Expr(kExprOperator);
     e->opType = kOpIn;
-    e->expr = expr;
+    exprList->push_back(expr);
     e->exprList = exprList;
-
     return e;
   }
 
   Expr* Expr::makeInOperator(Expr* expr, SelectStatement* select) {
     Expr* e = new Expr(kExprOperator);
     e->opType = kOpIn;
-    e->expr = expr;
+    e->exprList = new std::vector<Expr*>();
+    e->exprList->push_back(expr);
     e->select = select;
-
     return e;
   }
 

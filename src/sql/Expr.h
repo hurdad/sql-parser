@@ -76,9 +76,6 @@ namespace hsql {
 
     ExprType type;
 
-    // TODO: Replace expressions by list.
-    Expr* expr;
-    Expr* expr2;
     std::vector<Expr*>* exprList;
     SelectStatement* select;
     char* name;

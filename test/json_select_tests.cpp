@@ -89,9 +89,9 @@ TEST(JsonSelectHavingTest) {
   ASSERT_EQ(root["groupBy"]["columns"].size(), 1);
   ASSERT_STREQ(root["groupBy"]["having"]["opType"].asString(), "kOpLess");
 
-  ASSERT_STREQ(root["groupBy"]["having"]["expr"]["type"].asString(), "kExprFunctionRef");
-  ASSERT_STREQ(root["groupBy"]["having"]["expr2"]["type"].asString(), "kExprLiteralFloat");
-  ASSERT_EQ(root["groupBy"]["having"]["expr2"]["fval"].asFloat(), -2.0);
+  ASSERT_STREQ(root["groupBy"]["having"]["exprList"][0]["type"].asString(), "kExprFunctionRef");
+  ASSERT_STREQ(root["groupBy"]["having"]["exprList"][1]["type"].asString(), "kExprLiteralFloat");
+  ASSERT_EQ(root["groupBy"]["having"]["exprList"][1]["fval"].asFloat(), -2.0);
 }
 
 
@@ -189,15 +189,15 @@ TEST(JsonSelectBetweenTest) {
   ASSERT_STREQ(root["whereClause"]["type"].asString(), "kExprOperator");
   ASSERT_STREQ(root["whereClause"]["opType"].asString(), "kOpBetween");
 
-  ASSERT_STREQ(root["whereClause"]["expr"]["name"].asString(), "grade");
-  ASSERT_STREQ(root["whereClause"]["expr"]["type"].asString(), "kExprColumnRef");
-  ASSERT_EQ(root["whereClause"]["exprList"].size(), 2);
+  ASSERT_STREQ(root["whereClause"]["exprList"][0]["name"].asString(), "grade");
+  ASSERT_STREQ(root["whereClause"]["exprList"][0]["type"].asString(), "kExprColumnRef");
+  ASSERT_EQ(root["whereClause"]["exprList"].size(), 3);
 
-  ASSERT_STREQ(root["whereClause"]["exprList"][0]["type"].asString(), "kExprLiteralInt");
-  ASSERT_EQ(root["whereClause"]["exprList"][0]["ival"].asInt(), -1);
+  ASSERT_STREQ(root["whereClause"]["exprList"][1]["type"].asString(), "kExprLiteralInt");
+  ASSERT_EQ(root["whereClause"]["exprList"][1]["ival"].asInt(), -1);
 
-  ASSERT_STREQ(root["whereClause"]["exprList"][1]["type"].asString(), "kExprColumnRef");
-  ASSERT_STREQ(root["whereClause"]["exprList"][1]["name"].asString(), "c");
+  ASSERT_STREQ(root["whereClause"]["exprList"][2]["type"].asString(), "kExprColumnRef");
+  ASSERT_STREQ(root["whereClause"]["exprList"][2]["name"].asString(), "c");
 }
 
 TEST(JsonSelectConditionalSelectTest) {
@@ -208,8 +208,6 @@ TEST(JsonSelectConditionalSelectTest) {
     result,
     stmt);
 
-  //hsql::printStatementInfo(stmt);
-
   Json::Value root;
   Json::Reader reader;
   std::string json = jsonPrintStatementInfo(stmt, true);
@@ -219,27 +217,21 @@ TEST(JsonSelectConditionalSelectTest) {
   ASSERT_STREQ(root["whereClause"]["type"].asString(), "kExprOperator");
   ASSERT_STREQ(root["whereClause"]["opType"].asString(), "kOpAnd");
 
-  ASSERT(root["whereClause"].isMember("expr"));
-  ASSERT(root["whereClause"]["expr"].isMember("expr"));
+  ASSERT(root["whereClause"].isMember("exprList"));
+  ASSERT_EQ(root["whereClause"]["exprList"].size(), 2);
 
-  ASSERT_STREQ(root["whereClause"]["expr"]["opType"].asString(), "kOpEquals");
-  ASSERT_STREQ(root["whereClause"]["expr"]["expr"]["name"].asString(), "a");
-  ASSERT_STREQ(root["whereClause"]["expr"]["expr"]["type"].asString(), "kExprColumnRef");
+  // a = (SELECT ...)
+  ASSERT_STREQ(root["whereClause"]["exprList"][0]["opType"].asString(), "kOpEquals");
+  ASSERT_STREQ(root["whereClause"]["exprList"][0]["exprList"][0]["name"].asString(), "a");
+  ASSERT_STREQ(root["whereClause"]["exprList"][0]["exprList"][0]["type"].asString(), "kExprColumnRef");
+  ASSERT_STREQ(root["whereClause"]["exprList"][0]["exprList"][1]["type"].asString(), "kExprSelect");
+  ASSERT(root["whereClause"]["exprList"][0]["exprList"][1].isMember("select"));
+  ASSERT_STREQ(root["whereClause"]["exprList"][0]["exprList"][1]["select"]["fromTable"]["name"].asString(), "tt");
 
-  ASSERT(root["whereClause"]["expr"].isMember("expr2"));
-  ASSERT_STREQ(root["whereClause"]["expr"]["expr2"]["type"].asString(), "kExprSelect");
-  ASSERT(root["whereClause"]["expr"]["expr2"].isMember("select"));
-  ASSERT_STREQ(root["whereClause"]["expr"]["expr2"]["select"]["fromTable"]["name"].asString(), "tt");
+  // EXISTS (SELECT ...)
+  ASSERT_STREQ(root["whereClause"]["exprList"][1]["opType"].asString(), "kOpExists");
+  ASSERT_STREQ(root["whereClause"]["exprList"][1]["select"]["fromTable"]["name"].asString(), "test");
 
-  ASSERT(root["whereClause"].isMember("expr2"));
-  ASSERT_STREQ(root["whereClause"]["expr2"]["opType"].asString(), "kOpExists");
-
-  ASSERT(root["whereClause"].isMember("expr2"));
-
-  /*
-  SelectStatement* ex_select = cond2->select;
-  ASSERT_STREQ(ex_select->fromTable->getName(), "test");
-  */
 }
 
 TEST(JsonSelectCaseWhen) {
@@ -260,55 +252,55 @@ TEST(JsonSelectCaseWhen) {
   ASSERT_EQ(root["selectList"][0]["exprList"].size(), 1);
   ASSERT_STREQ(root["selectList"][0]["exprList"][0]["type"].asString(), "kExprOperator");
   ASSERT_STREQ(root["selectList"][0]["exprList"][0]["opType"].asString(), "kOpCase");
-  ASSERT_STREQ(root["selectList"][0]["exprList"][0]["expr"]["type"].asString(), "kExprOperator");
-  ASSERT_STREQ(root["selectList"][0]["exprList"][0]["expr"]["opType"].asString(), "kOpEquals");
-  ASSERT_EQ(root["selectList"][0]["exprList"][0]["exprList"].size(), 2);
+  ASSERT_STREQ(root["selectList"][0]["exprList"][0]["exprList"][0]["type"].asString(), "kExprOperator");
+  ASSERT_STREQ(root["selectList"][0]["exprList"][0]["exprList"][0]["opType"].asString(), "kOpEquals");
+  ASSERT_EQ(root["selectList"][0]["exprList"][0]["exprList"].size(), 3);
 }
 
 TEST(JsonSelectJoin) {
   TEST_PARSE_SINGLE_SQL(
     "SELECT City.name, Product.category, SUM(price) FROM fact\
-      INNER JOIN City ON fact.city_id = City.id\
-      OUTER JOIN Product ON fact.product_id = Product.id\
-      GROUP BY City.name, Product.category;",
+	  INNER JOIN City ON fact.city_id = City.id\
+	  OUTER JOIN Product ON fact.product_id = Product.id\
+	  GROUP BY City.name, Product.category;",
     kStmtSelect,
     SelectStatement,
     result,
     stmt);
-
 
   Json::Value root;
   Json::Reader reader;
   std::string json = jsonPrintStatementInfo(stmt, true);
   ASSERT_TRUE(reader.parse(json, root));
 
-  const TableRef* table = stmt->fromTable;
-  const JoinDefinition* outer_join = table->join;
-  ASSERT_EQ(table->type, kTableJoin);
-  ASSERT_EQ(outer_join->type, kJoinOuter);
+  ASSERT_STREQ(root["fromTable"]["type"].asString(), "kTableJoin");
+  ASSERT_STREQ(root["fromTable"]["join"]["type"].asString(), "kJoinOuter");
+  ASSERT_STREQ(root["fromTable"]["join"]["right"]["type"].asString(), "kTableName");
+  ASSERT_STREQ(root["fromTable"]["join"]["right"]["name"].asString(), "Product");
+  ASSERT_STREQ(root["fromTable"]["join"]["condition"]["opType"].asString(), "kOpEquals");
 
-  ASSERT_EQ(outer_join->right->type, kTableName);
-  ASSERT_STREQ(outer_join->right->name, "Product");
-  ASSERT_EQ(outer_join->condition->opType, kOpEquals);
-  ASSERT_STREQ(outer_join->condition->expr->table, "fact");
-  ASSERT_STREQ(outer_join->condition->expr->name, "product_id");
-  ASSERT_STREQ(outer_join->condition->expr2->table, "Product");
-  ASSERT_STREQ(outer_join->condition->expr2->name, "id");
+  ASSERT_STREQ(root["fromTable"]["join"]["condition"]["exprList"][0]["type"].asString(), "kExprColumnRef");
+  ASSERT_STREQ(root["fromTable"]["join"]["condition"]["exprList"][0]["table"].asString(), "fact");
+  ASSERT_STREQ(root["fromTable"]["join"]["condition"]["exprList"][0]["name"].asString(), "product_id");
+
+  ASSERT_STREQ(root["fromTable"]["join"]["condition"]["exprList"][1]["type"].asString(), "kExprColumnRef");
+  ASSERT_STREQ(root["fromTable"]["join"]["condition"]["exprList"][1]["table"].asString(), "Product");
+  ASSERT_STREQ(root["fromTable"]["join"]["condition"]["exprList"][1]["name"].asString(), "id");
 
   // Joins are are left associative.
   // So the second join should be on the left.
-  ASSERT_EQ(outer_join->left->type, kTableJoin);
+  ASSERT_STREQ(root["fromTable"]["join"]["left"]["type"].asString(), "kTableJoin");
+  ASSERT_STREQ(root["fromTable"]["join"]["left"]["join"]["type"].asString(), "kJoinInner");
+  ASSERT_STREQ(root["fromTable"]["join"]["left"]["join"]["left"]["type"].asString(), "kTableName");
+  ASSERT_STREQ(root["fromTable"]["join"]["left"]["join"]["left"]["name"].asString(), "fact");
+  ASSERT_STREQ(root["fromTable"]["join"]["left"]["join"]["right"]["type"].asString(), "kTableName");
+  ASSERT_STREQ(root["fromTable"]["join"]["left"]["join"]["right"]["name"].asString(), "City");
 
-  const JoinDefinition* inner_join = outer_join->left->join;
-  ASSERT_EQ(inner_join->type, kJoinInner);
-  ASSERT_EQ(inner_join->left->type, kTableName);
-  ASSERT_STREQ(inner_join->left->name, "fact");
-  ASSERT_EQ(inner_join->right->type, kTableName);
-  ASSERT_STREQ(inner_join->right->name, "City");
+  ASSERT_STREQ(root["fromTable"]["join"]["left"]["join"]["condition"]["exprList"][0]["type"].asString(), "kExprColumnRef");
+  ASSERT_STREQ(root["fromTable"]["join"]["left"]["join"]["condition"]["exprList"][0]["table"].asString(), "fact");
+  ASSERT_STREQ(root["fromTable"]["join"]["left"]["join"]["condition"]["exprList"][0]["name"].asString(), "city_id");
 
-  ASSERT_EQ(inner_join->condition->opType, kOpEquals);
-  ASSERT_STREQ(inner_join->condition->expr->table, "fact");
-  ASSERT_STREQ(inner_join->condition->expr->name, "city_id");
-  ASSERT_STREQ(inner_join->condition->expr2->table, "City");
-  ASSERT_STREQ(inner_join->condition->expr2->name, "id");
+  ASSERT_STREQ(root["fromTable"]["join"]["left"]["join"]["condition"]["exprList"][1]["type"].asString(), "kExprColumnRef");
+  ASSERT_STREQ(root["fromTable"]["join"]["left"]["join"]["condition"]["exprList"][1]["table"].asString(), "City");
+  ASSERT_STREQ(root["fromTable"]["join"]["left"]["join"]["condition"]["exprList"][1]["name"].asString(), "id");
 }

@@ -7,24 +7,53 @@ namespace hsql {
 
   void jsonPrintOperatorExpression(Expr* expr, Json::Value& root);
 
+  std::string joinEnumToString(JoinType type) {
+
+    switch (type) {
+    case kJoinInner:
+      return  "kJoinInner";
+    case kJoinOuter:
+      return "kJoinOuter";
+    case kJoinLeft:
+      return  "kJoinLeft";
+    case kJoinRight:
+      return  "kJoinRight";
+    case kJoinLeftOuter:
+      return  "kJoinLeftOuter";
+    case kJoinRightOuter:
+      return  "kJoinRightOuter";
+    case kJoinCross:
+      return  "kJoinCross";
+    case kJoinNatural:
+      return  "kJoinNatural";
+    default:
+      std::cerr << "Unrecognized join type " << type << std::endl;
+      return NULL;
+    }
+  }
+
   void jsonPrintTableRefInfo(TableRef* table, Json::Value& root) {
     switch (table->type) {
     case kTableName:
+      root["type"] = "kTableName";
       root["name"] = table->name;
-
       if(table->schema)  {
         root["schema"] = table->schema;
       }
       break;
     case kTableSelect:
+      root["type"] = "kTableSelect";
       jsonPrintSelectStatementInfo(table->select, root["select"]);
       break;
     case kTableJoin:
-      jsonPrintTableRefInfo(table->join->left, root["join_left"]);
-      jsonPrintTableRefInfo(table->join->right, root["join_right"]);
-      jsonPrintExpression(table->join->condition, root["join_condition"]);
+      root["type"] = "kTableJoin";
+      root["join"]["type"] = joinEnumToString(table->join->type);
+      jsonPrintTableRefInfo(table->join->left, root["join"]["left"]);
+      jsonPrintTableRefInfo(table->join->right, root["join"]["right"]);
+      jsonPrintExpression(table->join->condition, root["join"]["condition"]);
       break;
     case kTableCrossProduct:
+      root["type"] = "kTableCrossProduct";
       for (TableRef* tbl : *table->list) {
         Json::Value t;
         jsonPrintTableRefInfo(tbl, t);
@@ -128,17 +157,16 @@ namespace hsql {
       break;
     }
 
-    if (expr->expr != nullptr) {
-      jsonPrintExpression(expr->expr, root["expr"]);
-    }
-    if (expr->expr2 != nullptr) {
-      jsonPrintExpression(expr->expr2, root["expr2"]);
-    } else if (expr->exprList != nullptr) {
+    if (expr->exprList != nullptr) {
       for (Expr* e : *expr->exprList) {
         Json::Value exp;
         jsonPrintExpression(e, exp);
         root["exprList"].append(exp);
       }
+    }
+
+    if(expr->select != nullptr) {
+      jsonPrintSelectStatementInfo(expr->select, root["select"]);
     }
   }
 
@@ -156,7 +184,6 @@ namespace hsql {
         root["name"] = expr->name;
       }
       break;
-    // case kExprTableColumnRef: inprint(expr->table, expr->name, numIndent); break;
     case kExprLiteralFloat:
       root["type"] = "kExprLiteralFloat";
       root["fval"] = expr->fval;
@@ -201,7 +228,7 @@ namespace hsql {
       break;
     case kExprArrayIndex:
       root["type"] = "kExprArrayIndex";
-      jsonPrintExpression(expr->expr, root["expr"]);
+      // jsonPrintExpression(expr->expr, root["expr"]);
       root["ival"] = (Json::Value::Int64)expr->ival;
       break;
     default:
@@ -261,7 +288,6 @@ namespace hsql {
       root["limit"] = (Json::Value::Int64)stmt->limit->limit;
     }
   }
-
 
   void jsonPrintImportStatementInfo(const ImportStatement* stmt, Json::Value& root) {
     root["tableName"] = stmt->tableName;
