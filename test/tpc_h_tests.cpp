@@ -98,27 +98,27 @@ TEST(TPCHQueryDetailTest) {
   ASSERT_NOTNULL(where);
   ASSERT(where->isType(kExprOperator));
   ASSERT_EQ(where->opType, kOpAnd);
-  /*
-    Expr* andExpr2 = where->expr;
-    ASSERT_NOTNULL(andExpr2);
-    ASSERT(andExpr2->isType(kExprOperator));
-    ASSERT_EQ(andExpr2->opType, kOpAnd);
 
-    // Test IN expression.
-    Expr* inExpr = andExpr2->expr;
-    ASSERT_NOTNULL(inExpr);
-    ASSERT(inExpr->isType(kExprOperator));
-    ASSERT_EQ(inExpr->opType, kOpIn);
+  Expr* andExpr2 = where->exprList->at(0);
+  ASSERT_NOTNULL(andExpr2);
+  ASSERT(andExpr2->isType(kExprOperator));
+  ASSERT_EQ(andExpr2->opType, kOpAnd);
 
-    ASSERT_STREQ(inExpr->expr->getName(), "S_SUPPKEY");
-    ASSERT_NOTNULL(inExpr->select);
-    ASSERT_EQ(inExpr->select->selectList->size(), 1);
-    ASSERT(inExpr->select->selectList->at(0)->isType(kExprColumnRef));
-    ASSERT_STREQ(inExpr->select->selectList->at(0)->getName(), "PS_SUPPKEY");
+  // Test IN expression.
+  Expr* inExpr = andExpr2->exprList->at(0);
+  ASSERT_NOTNULL(inExpr);
+  ASSERT(inExpr->isType(kExprOperator));
+  ASSERT_EQ(inExpr->opType, kOpIn);
 
-    // Test ORDER BY clause.
-    ASSERT_NOTNULL(select20->order);
-    ASSERT_EQ(select20->order->size(), 1);
-    ASSERT(select20->order->at(0)->expr->isType(kExprColumnRef));
-    ASSERT_STREQ(select20->order->at(0)->expr->getName(), "S_NAME");*/
+  ASSERT_STREQ(inExpr->exprList->at(0)->getName(), "S_SUPPKEY");
+  ASSERT_NOTNULL(inExpr->select);
+  ASSERT_EQ(inExpr->select->selectList->size(), 1);
+  ASSERT(inExpr->select->selectList->at(0)->isType(kExprColumnRef));
+  ASSERT_STREQ(inExpr->select->selectList->at(0)->getName(), "PS_SUPPKEY");
+
+  // Test ORDER BY clause.
+  ASSERT_NOTNULL(select20->order);
+  ASSERT_EQ(select20->order->size(), 1);
+  ASSERT(select20->order->at(0)->expr->isType(kExprColumnRef));
+  ASSERT_STREQ(select20->order->at(0)->expr->getName(), "S_NAME");
 }
