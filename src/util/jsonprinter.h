@@ -1,7 +1,7 @@
 #ifndef __SQLPARSER__JSONPRINTER_H__
 #define __SQLPARSER__JSONPRINTER_H__
 
-#include "json/json.h"
+#include <jsoncpp/json/json.h>
 
 #include "../sql/statements.h"
 

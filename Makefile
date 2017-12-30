@@ -51,7 +51,7 @@ else
 endif
 LIB_CPP    = $(shell find $(SRC) -name '*.cpp' -not -path "$(SRCPARSER)/*") $(PARSER_CPP)
 LIB_H      = $(shell find $(SRC) -name '*.h' -not -path "$(SRCPARSER)/*") $(PARSER_H)
-LIB_ALL    = $(shell find $(SRC) -name '*.cpp' -not -path "$(SRCPARSER)/*" -not -path "$(SRC)/util/json/*") $(shell find $(SRC) -name '*.h' -not -path "$(SRCPARSER)/*" -not -path "$(SRC)/util/json/*")
+LIB_ALL    = $(shell find $(SRC) -name '*.cpp' -not -path "$(SRCPARSER)/*") $(shell find $(SRC) -name '*.h' -not -path "$(SRCPARSER)/*" -not -path "$(SRC)/util/json/*")
 LIB_OBJ    = $(LIB_CPP:%.cpp=%.o)
 
 library: $(LIB_BUILD)
@@ -112,7 +112,7 @@ save_benchmarks: benchmark
 
 $(BM_BUILD): $(BM_ALL) $(LIB_BUILD)
 	@mkdir -p $(BIN)/
-	$(CXX) $(BM_CFLAGS) $(BM_CPP) -o $(BM_BUILD) -lbenchmark -lpthread -lsqlparser -lstdc++ -lstdc++fs
+	$(CXX) $(BM_CFLAGS) $(BM_CPP) -o $(BM_BUILD) -lbenchmark -lpthread -lsqlparser -lstdc++ -lstdc++fs -ljsoncpp
 
 
 
@@ -130,7 +130,7 @@ test: $(TEST_BUILD)
 
 $(TEST_BUILD): $(TEST_ALL) $(LIB_BUILD)
 	@mkdir -p $(BIN)/
-	$(CXX) $(TEST_CFLAGS) $(TEST_CPP) -o $(TEST_BUILD) -lsqlparser -lstdc++
+	$(CXX) $(TEST_CFLAGS) $(TEST_CPP) -o $(TEST_BUILD) -lsqlparser -lstdc++ -ljsoncpp
 
 test_example:
 	$(GMAKE) -C example/
